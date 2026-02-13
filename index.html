@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Zone | Golden Arena</title>
+<style>
+:root {
+    --gold: #d4af37;
+    --dark-bg: #0a0a0a;
+    --card-bg: #161616;
+    --text: #e0e0e0;
+}
+body {
+    background-color: var(--dark-bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.container { width: 90%; max-width: 1000px; text-align: center; padding: 20px; }
+.screen { display: none; animation: fadeIn 0.8s ease forwards; }
+.active { display: block; }
+.external-link-btn { display: inline-flex; align-items: center; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); padding: 10px 20px; border-radius: 50px; color: var(--gold); text-decoration: none; font-size: 0.9rem; margin-bottom: 30px; transition: 0.3s; }
+.external-link-btn:hover { background: var(--gold); color: #000; }
+.arena-trigger { display: inline-flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #000 0%, #1a1a1a 100%); border: 2px solid var(--gold); border-radius: 15px; padding: 20px 35px; color: var(--gold); cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-top: 20px; }
+.arena-trigger:hover { transform: translateY(-5px); box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); }
+.arena-content { text-align: right; margin-left: 20px; }
+.arena-title { display: block; font-weight: bold; font-size: 1.4rem; }
+.arena-icon { font-size: 2rem; }
+.gold-input { background: #000; border: 1px solid #333; color: var(--gold); padding: 15px; border-radius: 8px; width: 80px; text-align: center; font-size: 1.2rem; outline: none; }
+.grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-top: 30px; }
+.card { background: var(--card-bg); border: 1px solid #222; padding: 25px; border-radius: 15px; text-align: right; }
+textarea { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; margin-top: 10px; border-radius: 8px; }
+.progress { width:100%; height:18px; background:#222; border-radius:10px; overflow:hidden; margin:20px 0; }
+.progress-bar { height:100%; width:0%; background:var(--gold); transition:.2s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div id="step1" class="screen active">
+    <a href="https://61465.github.io/game-zone-golden/" class="external-link-btn">
+        <span>🔗 الانتقال إلى Game Zone الرئيسي</span>
+    </a>
+    <h1 style="color: var(--gold); letter-spacing: 4px;">GOLDEN ARENA</h1>
+    <p>حلل حيرتك بين الألعاب والعتاد بذكاء</p>
+    <div style="margin: 30px 0;">
+        <label style="display:block; margin-bottom:10px;">كم اختياراً تود مقارنته؟</label>
+        <input type="number" id="choiceCount" class="gold-input" min="2" max="6" value="2">
+    </div>
+    <div class="arena-trigger" onclick="setupArena()">
+        <div class="arena-content">
+            <span class="arena-title">دخول ساحة القرار</span>
+            <span style="font-size: 0.8rem; color: #888;">ابدأ التحليل المنطقي</span>
+        </div>
+        <div class="arena-icon">✦</div>
+    </div>
+</div>
+
+<div id="step2" class="screen">
+    <h2 style="color: var(--gold);">CONFIGURATOR</h2>
+    <div id="arena-grid" class="grid-options"></div>
+    <div class="arena-trigger" onclick="runOracle()">
+        <div class="arena-content">
+            <span class="arena-title">كشف النتيجة</span>
+        </div>
+        <div class="arena-icon">👁️</div>
+    </div>
+</div>
+
+<div id="step3" class="screen">
+    <div style="border: 2px solid var(--gold); padding: 40px; border-radius: 20px; background: #111;">
+        <p>الاختيار المثالي بناءً على تحليلك:</p>
+        <div class="progress"><div id="bar" class="progress-bar"></div></div>
+        <div id="winner-text" style="font-size: 3rem; color: var(--gold); margin: 20px 0;"></div>
+        <div id="report-text" style="text-align: right; line-height: 1.8; color: #ccc;"></div>
+    </div>
+    <button class="arena-trigger" onclick="location.reload()">
+        <div class="arena-content"><span class="arena-title">إعادة التحليل</span></div>
+    </button>
+</div>
+
+</div>
+
+<script>
+function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function setupArena() {
+    const count = document.getElementById('choiceCount').value;
+    const grid = document.getElementById('arena-grid');
+    grid.innerHTML = '';
+    for(let i=1;i<=count;i++){
+        grid.innerHTML += `
+            <div class="card">
+                <label style="color:var(--gold);">الاختيار ${i}</label>
+                <input type="text" class="opt-name" placeholder="اسم اللعبة">
+                <textarea class="opt-thoughts" rows="4" placeholder="اكتب الإيجابيات والسلبيات هنا..."></textarea>
+            </div>`;
+    }
+    showScreen('step2');
+}
+
+// نظام تحليل ذكي مع كلمات موسّعة وعالم ألعاب
+function analyzeOption(text) {
+    const strongPos = ['مذهل','رائع','تحفة','أسطوري','ممتع جدًا','مثير','مبدع','لا يُصدق','متقن','مذهل حقًا','متميز','جيم بلاي','جرافيكس','أونلاين','كويست','ماب','أونلاين','ترقية','لوت','مهارات'];
+    const pos = ['جيد','قوي','سلس','جميل','ممتع','رخيص','شيق','مرضي','محبوب','مرتاح','سهل','فلير','قصة','تجربة','انميشن'];
+    const neg = ['ممل','ضعيف','سيء','قديم','صعب','غالي','معقد','مزعج','متعب','غير ممتع','مقيد','لاغ','باك','تقطيع','بطء'];
+    const strongNeg = ['كارثي','مزري','سيء جدًا','فظيع','مهلك','مدمر','محبط','غير مقبول','كئيب','جليتش','توقف','حظر'];
+    const hesitant = ['ربما','لا أعلم','مش متأكد','قد','يمكن','محايد','متحير','متردد','غير واثق','لا أعرف','أحيانًا'];
+
+    let sentences = text.split(/[.!؟]/).filter(s=>s.trim()!=='');
+    let score=0, posCount=0, negCount=0, hesitantCount=0;
+
+    sentences.forEach(s=>{
+        s=s.trim();
+        strongPos.forEach(w=>{ if(s.includes(w)) {score+=5; posCount++;}});
+        pos.forEach(w=>{ if(s.includes(w)) {score+=2; posCount++;}});
+        strongNeg.forEach(w=>{ if(s.includes(w)) {score-=5; negCount++;}});
+        neg.forEach(w=>{ if(s.includes(w)) {score-=2; negCount++;}});
+        hesitant.forEach(w=>{ if(s.includes(w)) {score-=1.5; hesitantCount++;}});
+        score += Math.min(s.length*0.05,2);
+    });
+
+    if(hesitantCount > posCount) score -= 2;
+    if(posCount > negCount) score += 1.5;
+
+    return {score,posCount,negCount,hesitantCount};
+}
+
+function runOracle() {
+    const names = document.querySelectorAll('.opt-name');
+    const texts = document.querySelectorAll('.opt-thoughts');
+    let results = [];
+
+    for(let i=0;i<names.length;i++){
+        if(!names[i].value || !texts[i].value){
+            alert("يجب كتابة اسم ووصف لكل خيار");
+            return;
+        }
+        let analysis = analyzeOption(texts[i].value);
+        results.push({
+            name: names[i].value,
+            score: analysis.score,
+            pos: analysis.posCount,
+            neg: analysis.negCount,
+            hesitant: analysis.hesitantCount
+        });
+    }
+
+    results.sort((a,b)=>b.score-a.score);
+    showScreen('step3');
+
+    let bar = document.getElementById('bar');
+    let p=0;
+    let timer = setInterval(()=>{
+        p+=5;
+        bar.style.width=p+"%";
+        if(p>=100){ clearInterval(timer);
+            // النتيجة بصياغة ودية
+            document.getElementById('winner-text').innerText = `أعتقد أن الخيار المناسب هو "${results[0].name}" لأنها تناسب ذوقك أكثر`;
+            let report="<b>تحليل كل خيار:</b><br>";
+            results.forEach(r=>{ report+=`${r.name} => نقاط: ${r.score.toFixed(1)}, إيجابيات: ${r.pos}, سلبيات: ${r.neg}, حالة نفسية: ${r.hesitant}<br>`; });
+            document.getElementById('report-text').innerHTML=report;
+        }
+    },40);
+}
+</script>
+</body>
+</html>
