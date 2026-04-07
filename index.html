@@ -3,174 +3,877 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Game Zone | Golden Arena</title>
+<title>Game Zone | Golden Arena Configurator</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+ 
 :root {
     --gold: #d4af37;
-    --dark-bg: #0a0a0a;
-    --card-bg: #161616;
+    --gold-light: #f0d060;
+    --gold-dim: rgba(212,175,55,0.15);
+    --dark-bg: #080808;
+    --card-bg: #111111;
+    --card-border: #1e1e1e;
     --text: #e0e0e0;
+    --text-muted: #777;
+    --success: #2ecc71;
+    --danger: #e74c3c;
+    --radius: 16px;
 }
+ 
+* { box-sizing: border-box; margin: 0; padding: 0; }
+ 
 body {
     background-color: var(--dark-bg);
     color: var(--text);
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
 }
-.container { width: 90%; max-width: 1000px; text-align: center; padding: 20px; }
-.screen { display: none; animation: fadeIn 0.8s ease forwards; }
-.active { display: block; }
-.external-link-btn { display: inline-flex; align-items: center; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); padding: 10px 20px; border-radius: 50px; color: var(--gold); text-decoration: none; font-size: 0.9rem; margin-bottom: 30px; transition: 0.3s; }
+ 
+/* ── خلفية متحركة ── */
+.bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.bg-canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(212,175,55,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(212,175,55,0.04) 0%, transparent 60%);
+}
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: float linear infinite;
+    opacity: 0;
+}
+@keyframes float {
+    0%   { transform: translateY(110vh) scale(0); opacity: 0; }
+    10%  { opacity: 0.4; }
+    90%  { opacity: 0.15; }
+    100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+}
+ 
+/* ── Layout ── */
+.wrapper {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px 60px;
+}
+ 
+/* ── Top bar ── */
+.topbar {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.logo {
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(212,175,55,0.4);
+}
+.logo span { color: #fff; }
+.external-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gold-dim);
+    border: 1px solid rgba(212,175,55,0.3);
+    padding: 9px 18px;
+    border-radius: 50px;
+    color: var(--gold);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: all 0.3s;
+}
 .external-link-btn:hover { background: var(--gold); color: #000; }
-.arena-trigger { display: inline-flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #000 0%, #1a1a1a 100%); border: 2px solid var(--gold); border-radius: 15px; padding: 20px 35px; color: var(--gold); cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-top: 20px; }
-.arena-trigger:hover { transform: translateY(-5px); box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); }
-.arena-content { text-align: right; margin-left: 20px; }
-.arena-title { display: block; font-weight: bold; font-size: 1.4rem; }
-.arena-icon { font-size: 2rem; }
-.gold-input { background: #000; border: 1px solid #333; color: var(--gold); padding: 15px; border-radius: 8px; width: 80px; text-align: center; font-size: 1.2rem; outline: none; }
-.grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-top: 30px; }
-.card { background: var(--card-bg); border: 1px solid #222; padding: 25px; border-radius: 15px; text-align: right; }
-textarea { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; margin-top: 10px; border-radius: 8px; }
-.progress { width:100%; height:18px; background:#222; border-radius:10px; overflow:hidden; margin:20px 0; }
-.progress-bar { height:100%; width:0%; background:var(--gold); transition:.2s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+ 
+/* ── Stepper ── */
+.stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 48px;
+}
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+}
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #555;
+    background: #111;
+    transition: all 0.4s;
+}
+.step-item.active .step-circle {
+    border-color: var(--gold);
+    color: var(--gold);
+    box-shadow: 0 0 16px rgba(212,175,55,0.4);
+}
+.step-item.done .step-circle {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #000;
+}
+.step-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.step-item.active .step-label { color: var(--gold); }
+.step-connector {
+    width: 60px;
+    height: 2px;
+    background: #222;
+    margin: 0 4px;
+    margin-bottom: 22px;
+    transition: background 0.4s;
+}
+.step-connector.done { background: var(--gold); }
+ 
+/* ── Screens ── */
+.screen { display: none; width: 100%; max-width: 1100px; }
+.screen.active { display: block; animation: fadeUp 0.6s ease forwards; }
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+ 
+/* ── Step 1 ── */
+.hero-title {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(212,175,55,0.35);
+    margin-bottom: 12px;
+}
+.hero-sub {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    margin-bottom: 50px;
+}
+ 
+.count-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 50px;
+}
+.count-label {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+.count-btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.count-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid #2a2a2a;
+    background: #111;
+    color: #888;
+    font-size: 1.1rem;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+.count-btn:hover { border-color: var(--gold); color: var(--gold); }
+.count-btn.selected {
+    border-color: var(--gold);
+    background: var(--gold-dim);
+    color: var(--gold);
+    box-shadow: 0 0 16px rgba(212,175,55,0.3);
+}
+ 
+/* ── Arena trigger button ── */
+.arena-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    background: linear-gradient(135deg, #0e0e0e 0%, #1a1500 100%);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 22px 36px;
+    color: var(--gold);
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-family: inherit;
+    position: relative;
+    overflow: hidden;
+}
+.arena-trigger::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(212,175,55,0.12) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.arena-trigger:hover { transform: translateY(-4px); box-shadow: 0 8px 40px rgba(212,175,55,0.35); }
+.arena-trigger:hover::after { opacity: 1; }
+.arena-trigger:active { transform: translateY(-1px); }
+.arena-content { text-align: right; }
+.arena-title { display: block; font-weight: 700; font-size: 1.3rem; }
+.arena-sub   { display: block; font-size: 0.78rem; color: #888; margin-top: 3px; }
+.arena-icon  { font-size: 2rem; flex-shrink: 0; }
+ 
+/* ── Step 2 ── */
+.step2-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 50px;
+    padding: 8px 18px;
+    color: #888;
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+.back-btn:hover { border-color: var(--gold); color: var(--gold); }
+ 
+.grid-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 22px;
+    margin-bottom: 36px;
+}
+ 
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: border-color 0.3s;
+    position: relative;
+}
+.card:focus-within { border-color: rgba(212,175,55,0.4); }
+ 
+.card-num {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: var(--gold);
+    color: #000;
+    font-weight: 900;
+    font-size: 0.75rem;
+    padding: 3px 12px;
+    border-radius: 50px;
+    letter-spacing: 1px;
+}
+.card-name-input {
+    width: 100%;
+    background: #000;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    color: var(--gold);
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-family: inherit;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.25s;
+    margin-top: 8px;
+}
+.card-name-input:focus { border-color: rgba(212,175,55,0.5); }
+.card-name-input::placeholder { color: #444; font-weight: 400; }
+ 
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0 10px;
+}
+.tab-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #2a2a2a;
+    background: #0a0a0a;
+    color: #666;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tab-btn.active-tab { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+ 
+.tab-pane { display: none; }
+.tab-pane.active-pane { display: block; }
+ 
+.card textarea {
+    width: 100%;
+    background: #000;
+    border: 1px solid #2a2a2a;
+    color: #fff;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.25s;
+}
+.card textarea:focus { border-color: rgba(212,175,55,0.4); }
+.card textarea::placeholder { color: #3a3a3a; }
+ 
+/* ── Progress bar ── */
+.progress-wrap {
+    width: 100%;
+    height: 6px;
+    background: #1a1a1a;
+    border-radius: 50px;
+    overflow: hidden;
+    margin: 24px 0;
+}
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+    border-radius: 50px;
+    transition: width 0.15s linear;
+}
+ 
+/* ── Step 3 ── */
+.results-box {
+    background: var(--card-bg);
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 24px;
+    padding: 40px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+.results-label { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px; }
+.winner-crown { font-size: 3rem; margin-bottom: 8px; }
+.winner-name {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(212,175,55,0.4);
+    margin-bottom: 6px;
+}
+.winner-msg { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 30px; }
+ 
+/* ranking cards */
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 30px;
+    text-align: right;
+}
+.rank-card {
+    background: #0d0d0d;
+    border: 1px solid #1e1e1e;
+    border-radius: 12px;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    animation: fadeUp 0.5s ease both;
+}
+.rank-card:nth-child(1) { border-color: rgba(212,175,55,0.4); }
+.rank-card:nth-child(2) { border-color: rgba(180,180,180,0.25); }
+.rank-card:nth-child(3) { border-color: rgba(180,100,50,0.25); }
+.rank-medal { font-size: 1.6rem; flex-shrink: 0; }
+.rank-info { flex: 1; min-width: 0; }
+.rank-name { font-weight: 700; font-size: 1rem; color: #ddd; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-bar-wrap { width: 100%; height: 6px; background: #222; border-radius: 50px; overflow: hidden; }
+.rank-bar { height: 100%; border-radius: 50px; transition: width 1.2s cubic-bezier(0.25,1,0.5,1); }
+.rank-bar.gold   { background: linear-gradient(90deg, #b8860b, var(--gold-light)); }
+.rank-bar.silver { background: linear-gradient(90deg, #888, #ccc); }
+.rank-bar.bronze { background: linear-gradient(90deg, #8B4513, #cd7f32); }
+.rank-bar.rest   { background: linear-gradient(90deg, #333, #555); }
+.rank-stats {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    font-size: 0.78rem;
+}
+.stat-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 50px;
+    background: #161616;
+}
+.stat-badge.pos { color: var(--success); border: 1px solid rgba(46,204,113,0.2); }
+.stat-badge.neg { color: var(--danger);  border: 1px solid rgba(231,76,60,0.2); }
+ 
+/* ── Toast ── */
+.toast-container {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.toast {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-size: 0.9rem;
+    color: #eee;
+    animation: toastIn 0.3s ease;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.toast.error { border-color: rgba(231,76,60,0.4); }
+.toast.success { border-color: rgba(212,175,55,0.4); }
+@keyframes toastIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+ 
+/* ── Misc buttons ── */
+.actions-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 12px 22px;
+    color: #aaa;
+    font-family: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+ 
+/* ── Responsive ── */
+@media (max-width: 540px) {
+    .rank-stats { display: none; }
+    .arena-trigger { padding: 18px 22px; }
+    .results-box { padding: 24px 18px; }
+}
 </style>
 </head>
 <body>
-<div class="container">
-
-<div id="step1" class="screen active">
-    <a href="https://61465.github.io/game-zone-golden/" class="external-link-btn">
-        <span>🔗 الانتقال إلى Game Zone الرئيسي</span>
-    </a>
-    <h1 style="color: var(--gold); letter-spacing: 4px;">GOLDEN ARENA</h1>
-    <p>حلل حيرتك بين الألعاب والعتاد بذكاء</p>
-    <div style="margin: 30px 0;">
-        <label style="display:block; margin-bottom:10px;">كم اختياراً تود مقارنته؟</label>
-        <input type="number" id="choiceCount" class="gold-input" min="2" max="6" value="2">
+ 
+<!-- خلفية متحركة -->
+<div class="bg-canvas" id="bgCanvas"></div>
+ 
+<div class="wrapper">
+ 
+    <!-- الشريط العلوي -->
+    <div class="topbar">
+        <div class="logo">GAME<span>ZONE</span> ✦</div>
+        <a href="https://61465.github.io/game-zone-golden/" class="external-link-btn" target="_blank" rel="noopener">
+            <span>🔗</span> الانتقال إلى Game Zone الرئيسي
+        </a>
     </div>
-    <div class="arena-trigger" onclick="setupArena()">
-        <div class="arena-content">
-            <span class="arena-title">دخول ساحة القرار</span>
-            <span style="font-size: 0.8rem; color: #888;">ابدأ التحليل المنطقي</span>
+ 
+    <!-- مؤشر الخطوات -->
+    <div class="stepper" id="stepper">
+        <div class="step-item active" data-step="1">
+            <div class="step-circle">1</div>
+            <span class="step-label">الإعداد</span>
         </div>
-        <div class="arena-icon">✦</div>
-    </div>
-</div>
-
-<div id="step2" class="screen">
-    <h2 style="color: var(--gold);">CONFIGURATOR</h2>
-    <div id="arena-grid" class="grid-options"></div>
-    <div class="arena-trigger" onclick="runOracle()">
-        <div class="arena-content">
-            <span class="arena-title">كشف النتيجة</span>
+        <div class="step-connector" id="conn1"></div>
+        <div class="step-item" data-step="2">
+            <div class="step-circle">2</div>
+            <span class="step-label">التحليل</span>
         </div>
-        <div class="arena-icon">👁️</div>
+        <div class="step-connector" id="conn2"></div>
+        <div class="step-item" data-step="3">
+            <div class="step-circle">3</div>
+            <span class="step-label">النتيجة</span>
+        </div>
     </div>
-</div>
-
-<div id="step3" class="screen">
-    <div style="border: 2px solid var(--gold); padding: 40px; border-radius: 20px; background: #111;">
-        <p>الاختيار المثالي بناءً على تحليلك:</p>
-        <div class="progress"><div id="bar" class="progress-bar"></div></div>
-        <div id="winner-text" style="font-size: 3rem; color: var(--gold); margin: 20px 0;"></div>
-        <div id="report-text" style="text-align: right; line-height: 1.8; color: #ccc;"></div>
+ 
+    <!-- ══ الخطوة 1 ══ -->
+    <div id="step1" class="screen active" style="text-align:center;">
+        <div class="hero-title">GOLDEN ARENA</div>
+        <p class="hero-sub">حلّل حيرتك بين الألعاب والعتاد بذكاء وجرّب أداة القرار الذهبية</p>
+ 
+        <div class="count-selector">
+            <span class="count-label">كم خياراً تودّ مقارنته؟</span>
+            <div class="count-btns" id="countBtns">
+                <button class="count-btn selected" data-val="2">2</button>
+                <button class="count-btn" data-val="3">3</button>
+                <button class="count-btn" data-val="4">4</button>
+                <button class="count-btn" data-val="5">5</button>
+                <button class="count-btn" data-val="6">6</button>
+            </div>
+        </div>
+ 
+        <button class="arena-trigger" onclick="setupArena()">
+            <div class="arena-content">
+                <span class="arena-title">دخول ساحة القرار</span>
+                <span class="arena-sub">ابدأ التحليل المنطقي الآن</span>
+            </div>
+            <div class="arena-icon">✦</div>
+        </button>
     </div>
-    <button class="arena-trigger" onclick="location.reload()">
-        <div class="arena-content"><span class="arena-title">إعادة التحليل</span></div>
-    </button>
+ 
+    <!-- ══ الخطوة 2 ══ -->
+    <div id="step2" class="screen">
+        <div class="step2-header">
+            <h2 style="color:var(--gold);letter-spacing:2px;font-size:1.4rem;">CONFIGURATOR</h2>
+            <button class="back-btn" onclick="goBack(1)">
+                ← رجوع
+            </button>
+        </div>
+        <div id="arena-grid" class="grid-options"></div>
+        <div style="text-align:center;">
+            <button class="arena-trigger" onclick="runOracle()">
+                <div class="arena-content">
+                    <span class="arena-title">كشف النتيجة</span>
+                    <span class="arena-sub">دع الذكاء يحكم</span>
+                </div>
+                <div class="arena-icon">👁️</div>
+            </button>
+        </div>
+    </div>
+ 
+    <!-- ══ الخطوة 3 ══ -->
+    <div id="step3" class="screen">
+        <div class="results-box">
+            <p class="results-label">الاختيار الأمثل بناءً على تحليلك</p>
+            <div class="winner-crown">🏆</div>
+            <div class="progress-wrap"><div id="bar" class="progress-bar"></div></div>
+            <div id="winner-name" class="winner-name"></div>
+            <div id="winner-msg"  class="winner-msg"></div>
+            <div id="ranking-list" class="ranking-list"></div>
+        </div>
+ 
+        <div class="actions-row">
+            <button class="btn-outline" onclick="copyResults()">📋 نسخ النتائج</button>
+            <button class="btn-outline" onclick="goBack(2)">← تعديل الخيارات</button>
+            <button class="arena-trigger" style="padding:14px 28px;" onclick="location.reload()">
+                <div class="arena-content">
+                    <span class="arena-title" style="font-size:1rem;">تحليل جديد</span>
+                </div>
+                <div class="arena-icon" style="font-size:1.4rem;">↺</div>
+            </button>
+        </div>
+    </div>
+ 
 </div>
-
-</div>
-
+ 
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+ 
 <script>
-function showScreen(id){
+/* ══════════════════════════════════════════
+   الجسيمات الخلفية
+══════════════════════════════════════════ */
+(function(){
+    const canvas = document.getElementById('bgCanvas');
+    const count = 18;
+    for(let i=0;i<count;i++){
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random()*3+1;
+        p.style.cssText = `
+            width:${size}px; height:${size}px;
+            left:${Math.random()*100}%;
+            animation-duration:${Math.random()*14+8}s;
+            animation-delay:${Math.random()*10}s;
+        `;
+        canvas.appendChild(p);
+    }
+})();
+ 
+/* ══════════════════════════════════════════
+   الحالة العامة
+══════════════════════════════════════════ */
+let selectedCount = 2;
+let lastResults   = [];
+ 
+/* ══════════════════════════════════════════
+   مؤشر الخطوات
+══════════════════════════════════════════ */
+function setStep(n) {
+    document.querySelectorAll('.step-item').forEach((el,i)=>{
+        el.classList.toggle('active', i+1 === n);
+        el.classList.toggle('done',   i+1 < n);
+    });
+    document.getElementById('conn1').classList.toggle('done', n > 1);
+    document.getElementById('conn2').classList.toggle('done', n > 2);
+}
+ 
+/* ══════════════════════════════════════════
+   التنقل بين الشاشات
+══════════════════════════════════════════ */
+function showScreen(id, stepNum) {
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+    setStep(stepNum);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
+ 
+function goBack(stepNum) {
+    if(stepNum === 1) showScreen('step1', 1);
+    if(stepNum === 2) showScreen('step2', 2);
+}
+ 
+/* ══════════════════════════════════════════
+   اختيار العدد
+══════════════════════════════════════════ */
+document.getElementById('countBtns').addEventListener('click', e=>{
+    if(!e.target.matches('.count-btn')) return;
+    document.querySelectorAll('.count-btn').forEach(b=>b.classList.remove('selected'));
+    e.target.classList.add('selected');
+    selectedCount = parseInt(e.target.dataset.val);
+});
+ 
+/* ══════════════════════════════════════════
+   إعداد الساحة
+══════════════════════════════════════════ */
 function setupArena() {
-    const count = document.getElementById('choiceCount').value;
     const grid = document.getElementById('arena-grid');
+    const medals = ['🥇','🥈','🥉','🏅','🎮','🕹️'];
     grid.innerHTML = '';
-    for(let i=1;i<=count;i++){
+    for(let i=1;i<=selectedCount;i++){
         grid.innerHTML += `
-            <div class="card">
-                <label style="color:var(--gold);">الاختيار ${i}</label>
-                <input type="text" class="opt-name" placeholder="اسم اللعبة">
-                <textarea class="opt-thoughts" rows="4" placeholder="اكتب الإيجابيات والسلبيات هنا..."></textarea>
-            </div>`;
+        <div class="card">
+            <div class="card-num">الخيار ${i}</div>
+            <input type="text" class="opt-name card-name-input" placeholder="${medals[i-1]} اسم الخيار...">
+            <div class="tabs">
+                <button class="tab-btn active-tab" onclick="switchTab(this,'pos${i}','neg${i}')">✅ الإيجابيات</button>
+                <button class="tab-btn"            onclick="switchTab(this,'neg${i}','pos${i}')">❌ السلبيات</button>
+            </div>
+            <div id="pos${i}" class="tab-pane active-pane">
+                <textarea class="opt-pos" rows="4" placeholder="مثال: جرافيكس رائع، قصة مذهلة، أونلاين سلس..."></textarea>
+            </div>
+            <div id="neg${i}" class="tab-pane">
+                <textarea class="opt-neg" rows="4" placeholder="مثال: باك مزعج، لود بطيء، غالي..."></textarea>
+            </div>
+        </div>`;
     }
-    showScreen('step2');
+    showScreen('step2', 2);
 }
-
-// نظام تحليل ذكي مع كلمات موسّعة وعالم ألعاب
-function analyzeOption(text) {
-    const strongPos = ['مذهل','رائع','تحفة','أسطوري','ممتع جدًا','مثير','مبدع','لا يُصدق','متقن','مذهل حقًا','متميز','جيم بلاي','جرافيكس','أونلاين','كويست','ماب','أونلاين','ترقية','لوت','مهارات'];
-    const pos = ['جيد','قوي','سلس','جميل','ممتع','رخيص','شيق','مرضي','محبوب','مرتاح','سهل','فلير','قصة','تجربة','انميشن'];
-    const neg = ['ممل','ضعيف','سيء','قديم','صعب','غالي','معقد','مزعج','متعب','غير ممتع','مقيد','لاغ','باك','تقطيع','بطء'];
-    const strongNeg = ['كارثي','مزري','سيء جدًا','فظيع','مهلك','مدمر','محبط','غير مقبول','كئيب','جليتش','توقف','حظر'];
-    const hesitant = ['ربما','لا أعلم','مش متأكد','قد','يمكن','محايد','متحير','متردد','غير واثق','لا أعرف','أحيانًا'];
-
-    let sentences = text.split(/[.!؟]/).filter(s=>s.trim()!=='');
-    let score=0, posCount=0, negCount=0, hesitantCount=0;
-
-    sentences.forEach(s=>{
-        s=s.trim();
-        strongPos.forEach(w=>{ if(s.includes(w)) {score+=5; posCount++;}});
-        pos.forEach(w=>{ if(s.includes(w)) {score+=2; posCount++;}});
-        strongNeg.forEach(w=>{ if(s.includes(w)) {score-=5; negCount++;}});
-        neg.forEach(w=>{ if(s.includes(w)) {score-=2; negCount++;}});
-        hesitant.forEach(w=>{ if(s.includes(w)) {score-=1.5; hesitantCount++;}});
-        score += Math.min(s.length*0.05,2);
-    });
-
-    if(hesitantCount > posCount) score -= 2;
-    if(posCount > negCount) score += 1.5;
-
-    return {score,posCount,negCount,hesitantCount};
+ 
+function switchTab(btn, showId, hideId) {
+    btn.closest('.card').querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active-tab'));
+    btn.classList.add('active-tab');
+    document.getElementById(showId).classList.add('active-pane');
+    document.getElementById(hideId).classList.remove('active-pane');
 }
-
+ 
+/* ══════════════════════════════════════════
+   محرك التحليل
+══════════════════════════════════════════ */
+function analyzeOption(posText, negText) {
+    const strongPos = ['مذهل','رائع','تحفة','أسطوري','ممتع جدًا','مثير','مبدع','لا يُصدق','متقن','متميز','جيم بلاي','جرافيكس','أونلاين قوي','ترقية','مهارات','ولا أروع','خرافي','مقدام','إبداع','فنتازيا'];
+    const pos       = ['جيد','قوي','سلس','جميل','ممتع','رخيص','شيق','مرضي','محبوب','سهل','قصة','تجربة','انميشن','واقعي','عالم','مفتوح','كويست','كوب','بيتا','تحديث'];
+    const strongNeg = ['كارثي','مزري','سيء جدًا','فظيع','مهلك','مدمر','محبط','غير مقبول','كئيب','جليتش شديد','توقف مستمر','حظر'];
+    const neg       = ['ممل','ضعيف','سيء','قديم','صعب','غالي','معقد','مزعج','متعب','غير ممتع','مقيد','لاغ','باك','تقطيع','بطء','تكرار'];
+    const hesitant  = ['ربما','لا أعلم','مش متأكد','قد','يمكن','محايد','متحير','متردد','غير واثق','أحيانًا'];
+ 
+    function score(text, multiplier) {
+        if(!text) return { score:0, pos:0, neg:0, hes:0 };
+        let s=0, p=0, n=0, h=0;
+        const sentences = text.split(/[.!؟،,]/).filter(x=>x.trim());
+        sentences.forEach(sent=>{
+            sent = sent.trim();
+            strongPos.forEach(w=>{ if(sent.includes(w)){s+=5*multiplier;p++;} });
+            pos.forEach(w=>{       if(sent.includes(w)){s+=2*multiplier;p++;} });
+            strongNeg.forEach(w=>{ if(sent.includes(w)){s-=5;n++;} });
+            neg.forEach(w=>{       if(sent.includes(w)){s-=2;n++;} });
+            hesitant.forEach(w=>{ if(sent.includes(w)){s-=1;h++;} });
+            s += Math.min(sent.length*0.04, 1.5) * multiplier;
+        });
+        return {score:s, pos:p, neg:n, hes:h};
+    }
+ 
+    const posResult = score(posText, 1);
+    const negResult = score(negText, -1);
+ 
+    let total = posResult.score + negResult.score;
+    const totalPos = posResult.pos + negResult.pos;
+    const totalNeg = posResult.neg + negResult.neg;
+    const totalHes = posResult.hes + negResult.hes;
+ 
+    if(totalHes > totalPos) total -= 2;
+    if(totalPos > totalNeg) total += 1.5;
+ 
+    return { score: total, pos: totalPos, neg: totalNeg, hes: totalHes };
+}
+ 
+/* ══════════════════════════════════════════
+   تشغيل النتائج
+══════════════════════════════════════════ */
 function runOracle() {
-    const names = document.querySelectorAll('.opt-name');
-    const texts = document.querySelectorAll('.opt-thoughts');
+    const names    = document.querySelectorAll('.opt-name');
+    const posTxts  = document.querySelectorAll('.opt-pos');
+    const negTxts  = document.querySelectorAll('.opt-neg');
     let results = [];
-
+ 
     for(let i=0;i<names.length;i++){
-        if(!names[i].value || !texts[i].value){
-            alert("يجب كتابة اسم ووصف لكل خيار");
+        const name = names[i].value.trim();
+        const pos  = posTxts[i].value.trim();
+        const neg  = negTxts[i].value.trim();
+        if(!name) {
+            showToast(`أدخل اسم الخيار ${i+1}`, 'error');
+            names[i].focus();
             return;
         }
-        let analysis = analyzeOption(texts[i].value);
-        results.push({
-            name: names[i].value,
-            score: analysis.score,
-            pos: analysis.posCount,
-            neg: analysis.negCount,
-            hesitant: analysis.hesitantCount
-        });
-    }
-
-    results.sort((a,b)=>b.score-a.score);
-    showScreen('step3');
-
-    let bar = document.getElementById('bar');
-    let p=0;
-    let timer = setInterval(()=>{
-        p+=5;
-        bar.style.width=p+"%";
-        if(p>=100){ clearInterval(timer);
-            // النتيجة بصياغة ودية
-            document.getElementById('winner-text').innerText = `أعتقد أن الخيار المناسب هو "${results[0].name}" لأنها تناسب ذوقك أكثر`;
-            let report="<b>تحليل كل خيار:</b><br>";
-            results.forEach(r=>{ report+=`${r.name} => نقاط: ${r.score.toFixed(1)}, إيجابيات: ${r.pos}, سلبيات: ${r.neg}, حالة نفسية: ${r.hesitant}<br>`; });
-            document.getElementById('report-text').innerHTML=report;
+        if(!pos && !neg) {
+            showToast(`اكتب على الأقل إيجابية أو سلبية للخيار "${name}"`, 'error');
+            return;
         }
-    },40);
+        const analysis = analyzeOption(pos, neg);
+        results.push({ name, ...analysis });
+    }
+ 
+    results.sort((a,b)=>b.score-a.score);
+    lastResults = results;
+ 
+    showScreen('step3', 3);
+ 
+    // Animate progress bar then reveal results
+    const bar = document.getElementById('bar');
+    bar.style.width = '0%';
+    document.getElementById('winner-name').textContent = '';
+    document.getElementById('winner-msg').textContent  = '';
+    document.getElementById('ranking-list').innerHTML  = '';
+ 
+    let p = 0;
+    const timer = setInterval(()=>{
+        p = Math.min(p + 3, 100);
+        bar.style.width = p + '%';
+        if(p >= 100) {
+            clearInterval(timer);
+            revealResults(results);
+        }
+    }, 30);
+}
+ 
+function revealResults(results) {
+    const winner = results[0];
+ 
+    document.getElementById('winner-name').textContent = winner.name;
+    document.getElementById('winner-msg').textContent  =
+        `بناءً على تحليلك، هذا الخيار يناسب ذوقك أكثر — ${winner.pos} إيجابية مقابل ${winner.neg} سلبية`;
+ 
+    const medals  = ['🥇','🥈','🥉','🏅','🎮','🕹️'];
+    const barClass = ['gold','silver','bronze','rest','rest','rest'];
+    const maxScore = Math.abs(results[0].score) || 1;
+ 
+    const list = document.getElementById('ranking-list');
+    results.forEach((r,i)=>{
+        const pct = Math.max(10, Math.min(100, ((r.score - results[results.length-1].score) / (results[0].score - results[results.length-1].score + 0.001)) * 100));
+ 
+        const card = document.createElement('div');
+        card.className = 'rank-card';
+        card.style.animationDelay = (i*0.12) + 's';
+        card.innerHTML = `
+            <div class="rank-medal">${medals[i]||'🎮'}</div>
+            <div class="rank-info">
+                <div class="rank-name">${r.name}</div>
+                <div class="rank-bar-wrap">
+                    <div class="rank-bar ${barClass[i]||'rest'}" style="width:0%" data-pct="${pct.toFixed(0)}"></div>
+                </div>
+            </div>
+            <div class="rank-stats">
+                <div class="stat-badge pos">✅ ${r.pos}</div>
+                <div class="stat-badge neg">❌ ${r.neg}</div>
+            </div>`;
+        list.appendChild(card);
+ 
+        // Animate bar width after a brief delay
+        setTimeout(()=>{
+            card.querySelector('.rank-bar').style.width = pct + '%';
+        }, 100 + i*80);
+    });
+}
+ 
+/* ══════════════════════════════════════════
+   نسخ النتائج
+══════════════════════════════════════════ */
+function copyResults() {
+    if(!lastResults.length) return;
+    let txt = '🏆 نتائج Golden Arena\n\n';
+    const medals = ['🥇','🥈','🥉','🏅','🎮','🕹️'];
+    lastResults.forEach((r,i)=>{
+        txt += `${medals[i]||'🎮'} ${r.name}  (إيجابيات: ${r.pos} | سلبيات: ${r.neg})\n`;
+    });
+    txt += '\n✦ تم التحليل بواسطة Game Zone Golden Arena';
+    navigator.clipboard.writeText(txt).then(()=>{
+        showToast('تم نسخ النتائج ✓', 'success');
+    }).catch(()=>{
+        showToast('تعذّر النسخ، حاول يدويًا', 'error');
+    });
+}
+ 
+/* ══════════════════════════════════════════
+   Toast notifications
+══════════════════════════════════════════ */
+function showToast(msg, type='info') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${type==='error'?'⚠️':type==='success'?'✓':'ℹ'}</span> ${msg}`;
+    c.appendChild(t);
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(10px)'; t.style.transition='all 0.4s'; }, 2800);
+    setTimeout(()=>t.remove(), 3300);
 }
 </script>
 </body>
